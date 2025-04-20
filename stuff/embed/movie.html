@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch Movie</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <script src="stuff/js/movie.js" defer></script>
+  <style>
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background-color: #1f1f1f;
+    }
+    #title {
+      margin-left: auto;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+    }
+    .dropdown-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .dropdown-container select {
+      padding: 5px;
+    }
+    .player-container {
+      background-color: #121212;
+      border-radius: 10px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      margin-top: 10px; /* Reduced margin-top to move iframe up */
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="dropdown-container">
+      <select id="sourceSelector">
+        <option value="1">Source 1</option>
+        <option value="2">Source 2</option>
+        <option value="3">Source 3</option>
+      </select>
+    </div>
+    <h1 id="title">Loading Movie...</h1> <!-- Title will be dynamically updated -->
+  </div>
+  <div class="player-container">
+    <iframe id="iframe" width="100%" height="600px" allowfullscreen></iframe>
+  </div>
+
+  <script>
+    // This function loads the movie based on the ID from the URL
+    async function loadMovie() {
+      const params = new URLSearchParams(window.location.search);
+      const movieID = params.get("id");
+
+      if (!movieID) {
+        window.location.href = "/"; // Go to homepage if no ID is provided
+        return;
+      }
+
+      // API key for TMDB (Make sure to replace this with your actual key)
+      const apiKey = '9a2954cb0084e80efa20b3729db69067';
+      const movieDetailsUrl = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKey}&language=en-US`;
+
+      try {
+        const response = await fetch(movieDetailsUrl);
+        const movieData = await response.json();
+
+        // Update title dynamically
+        const titleElement = document.getElementById("title");
+        titleElement.textContent = `${movieData.title} (${movieData.release_date.slice(0, 4)})`;
+
+        // Set the iframe source for the selected movie
+        const movieSources = [
+          `https://vidfast.pro/movie/${movieID}?autoPlay=true`, // Source 1
+          `https://player.videasy.net/movie/${movieID}?autoPlay=true&episodeSelector=false`, // Source 2
+          `https://111movies.com/movie/${movieID}?autoPlay=true` // Source 3
+        ];
+
+        const sourceSelector = document.getElementById("sourceSelector");
+        sourceSelector.addEventListener("change", function() {
+          const selectedSource = sourceSelector.value;
+          const iframe = document.getElementById("iframe");
+          iframe.src = movieSources[selectedSource - 1];
+        });
+
+        // Set initial iframe source
+        document.getElementById("iframe").src = movieSources[0];
+      } catch (error) {
+        console.error("Error fetching movie details:", error);
+      }
+    }
+
+    // Load the movie when the page is loaded
+    window.addEventListener("DOMContentLoaded", loadMovie);
+  </script>
+</body>
+</html>
+
